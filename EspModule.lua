@@ -19,7 +19,24 @@ local colors = {
     TemEggs = Color3.fromRGB(255, 255, 255)
 }
 
+local roleText = {
+    Survivors = "SURVIVOR",
+    Killers = "KILLER",
+    Traps = "TRAP",
+    TemEggs = "TEM EGG"
+}
+
 local hasDrawing = type(Drawing) == "table" and type(Drawing.new) == "function"
+
+local tracerFolder
+if not hasDrawing then
+    tracerFolder = CoreGui:FindFirstChild("EspTracersFolder")
+    if not tracerFolder then
+        tracerFolder = Instance.new("Folder")
+        tracerFolder.Name = "EspTracersFolder"
+        tracerFolder.Parent = CoreGui
+    end
+end
 
 local function getOriginPosition()
     local cam = workspace.CurrentCamera
@@ -94,18 +111,16 @@ end
 local function createTracer()
     if hasDrawing then
         local line = Drawing.new("Line")
-        line.Thickness = 1.5
-        line.Transparency = 0.8
+        line.Thickness = 2
+        line.Transparency = 1
+        line.Visible = false
         return line
     else
-        local folder = CoreGui:FindFirstChild("EspTracersFolder") or Instance.new("Folder")
-        folder.Name = "EspTracersFolder"
-        folder.Parent = CoreGui
-
         local line = Instance.new("Frame")
         line.AnchorPoint = Vector2.new(0.5, 0.5)
         line.BorderSizePixel = 0
-        line.Parent = folder
+        line.Visible = false
+        line.Parent = tracerFolder
         return line
     end
 end
@@ -118,12 +133,16 @@ local function updateTracer(line, from, to, color)
         line.Visible = true
     else
         local distance = (to - from).Magnitude
+        if distance < 1 then
+            line.Visible = false
+            return
+        end
         local center = (from + to) / 2
         local angle = math.atan2(to.Y - from.Y, to.X - from.X)
 
         line.BackgroundColor3 = color
         line.Position = UDim2.fromOffset(center.X, center.Y)
-        line.Size = UDim2.fromOffset(distance, 1.5)
+        line.Size = UDim2.fromOffset(distance, 2)
         line.Rotation = math.deg(angle)
         line.Visible = true
     end
@@ -141,8 +160,8 @@ local function updateTarget(target)
             local hl = Instance.new("Highlight")
             hl.FillColor = color
             hl.OutlineColor = Color3.new(1, 1, 1)
-            hl.FillTransparency = 0.65
-            hl.OutlineTransparency = 1
+            hl.FillTransparency = 0.55
+            hl.OutlineTransparency = 0
             hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
             hl.Parent = target.model
             highlights[id] = hl
@@ -155,29 +174,53 @@ local function updateTarget(target)
 
     if not labels[id] then
         local bp = Instance.new("BillboardGui")
-        bp.Size = UDim2.new(0, 50, 0, 10)
         bp.AlwaysOnTop = true
         bp.LightInfluence = 0
-        bp.StudsOffset = Vector3.new(0, 2.6, 0)
+        bp.StudsOffset = Vector3.new(0, 3, 0)
+        bp.Size = UDim2.new(0, 120, 0, 30)
 
-        local tl = Instance.new("TextLabel")
-        tl.BackgroundTransparency = 1
-        tl.Size = UDim2.new(1, 0, 1, 0)
-        tl.Font = Enum.Font.Gotham
-        tl.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tl.TextSize = 8
-        tl.Text = target.name
-        tl.Parent = bp
+        local nameTL = Instance.new("TextLabel")
+        nameTL.BackgroundTransparency = 1
+        nameTL.Size = UDim2.new(1, 0, 0, 14)
+        nameTL.Position = UDim2.new(0, 0, 0, 0)
+        nameTL.Font = Enum.Font.GothamBold
+        nameTL.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameTL.TextStrokeColor3 = Color3.new(0, 0, 0)
+        nameTL.TextStrokeTransparency = 0
+        nameTL.TextScaled = false
+        nameTL.TextSize = 12
+        nameTL.Text = target.name
+        nameTL.Parent = bp
+
+        local roleTL = Instance.new("TextLabel")
+        roleTL.BackgroundTransparency = 1
+        roleTL.Size = UDim2.new(1, 0, 0, 10)
+        roleTL.Position = UDim2.new(0, 0, 0, 14)
+        roleTL.Font = Enum.Font.Gotham
+        roleTL.TextColor3 = color
+        roleTL.TextStrokeColor3 = Color3.new(0, 0,0)
+        roleTL.TextStrokeTransparency = 0
+        roleTL.TextScaled = false
+        roleTL.TextSize = 9
+        roleTL.Text = roleText[target.type]
+        roleTL.Parent = bp
+
         bp.Parent = target.part
 
-        labels[id] = { gui = bp, label = tl }
+        labels[id] = { gui = bp, name = nameTL, role = roleTL }
     end
 
     local dist = (cam.CFrame.Position - target.part.Position).Magnitude
-    local scale = math.clamp(100 / dist, 0.4, 1.4)
+    local scale = math.clamp(150 / dist, 0.5, 2)
     local baseSize = Esp.Options and Esp.Options.EspSize and Esp.Options.EspSize.Value or 14
-    labels[id].label.TextSize = math.clamp(baseSize * scale * 0.5, 6, 12)
-    labels[id].gui.Size = UDim2.new(0, 50 * scale, 0, 10 * scale)
+
+    local nameSize = math.clamp(baseSize * scale, 8, baseSize * 2)
+    local roleSize = math.clamp(baseSize * scale * 0.7, 6, baseSize * 1.5)
+
+    labels[id].name.TextSize = nameSize
+    labels[id].role.TextSize = roleSize
+    labels[id].gui.Size = UDim2.new(0, nameSize * 8, 0, nameSize + roleSize)
+    labels[id].role.Position = UDim2.new(0, 0, 0, nameSize)
 
     local tracerOn = Esp.Toggles and Esp.Toggles.Tracers and Esp.Toggles.Tracers.Value
     if tracerOn then
@@ -188,7 +231,11 @@ local function updateTarget(target)
             end
             updateTracer(tracers[id], getOriginPosition(), Vector2.new(screenPos.X, screenPos.Y), color)
         elseif tracers[id] then
-            tracers[id].Visible = false
+            if hasDrawing then
+                tracers[id].Visible = false
+            else
+                tracers[id].Visible = false
+            end
         end
     elseif tracers[id] then
         if hasDrawing then
@@ -208,7 +255,7 @@ local function syncEsp()
         local enabled = Esp.Toggles and Esp.Toggles[t.type] and Esp.Toggles[t.type].Value
         if enabled then
             activeIds[t.model] = true
-            updateTarget(t)
+            pcall(updateTarget, t)
         else
             clearEntry(t.model)
         end
@@ -220,6 +267,9 @@ local function syncEsp()
     for id in pairs(tracers) do
         if not activeIds[id] then clearEntry(id) end
     end
+    for id in pairs(labels) do
+        if not activeIds[id] then clearEntry(id) end
+    end
 end
 
 function Esp.Init(options, toggles)
@@ -227,7 +277,7 @@ function Esp.Init(options, toggles)
     Esp.Toggles = toggles
 
     RunService.RenderStepped:Connect(function()
-        syncEsp()
+        pcall(syncEsp)
     end)
 end
 
