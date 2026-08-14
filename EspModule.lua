@@ -91,59 +91,63 @@ local function updateTarget(target)
     end
 
     local showNames = Esp.Toggles and Esp.Toggles.ShowNames and Esp.Toggles.ShowNames.Value ~= false
+    if not labels[id] then
+        local bp = Instance.new("BillboardGui")
+        bp.AlwaysOnTop = true
+        bp.LightInfluence = 0
+        bp.StudsOffset = Vector3.new(0, 3, 0)
+        bp.Size = UDim2.new(0, 120, 0, 30)
+
+        local nameTL = Instance.new("TextLabel")
+        nameTL.BackgroundTransparency = 1
+        nameTL.Size = UDim2.new(1, 0, 0, 14)
+        nameTL.Position = UDim2.new(0, 0, 0, 0)
+        nameTL.Font = Enum.Font.GothamBold
+        nameTL.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameTL.TextStrokeColor3 = Color3.new(0, 0, 0)
+        nameTL.TextStrokeTransparency = 0
+        nameTL.TextScaled = false
+        nameTL.TextSize = 12
+        nameTL.Text = target.name
+        nameTL.Visible = showNames
+        nameTL.Parent = bp
+
+        local roleTL = Instance.new("TextLabel")
+        roleTL.BackgroundTransparency = 1
+        roleTL.Size = UDim2.new(1, 0, 0, 10)
+        roleTL.Position = UDim2.new(0, 0, 0, 14)
+        roleTL.Font = Enum.Font.Gotham
+        roleTL.TextColor3 = color
+        roleTL.TextStrokeColor3 = Color3.new(0, 0, 0)
+        roleTL.TextStrokeTransparency = 0
+        roleTL.TextScaled = false
+        roleTL.TextSize = 9
+        roleTL.Text = roleText[target.type]
+        roleTL.Parent = bp
+
+        bp.Parent = target.part
+
+        labels[id] = { gui = bp, name = nameTL, role = roleTL }
+    end
+
+    labels[id].name.Visible = showNames
+
+    local dist = (cam.CFrame.Position - target.part.Position).Magnitude
+    local scale = math.clamp(150 / dist, 0.5, 2)
+    local baseSize = Esp.Options and Esp.Options.EspSize and Esp.Options.EspSize.Value or 14
+
+    local nameSize = math.clamp(baseSize * scale, 8, baseSize * 2)
+    local roleSize = math.clamp(baseSize * scale * 0.7, 6, baseSize * 1.5)
+
+    labels[id].name.TextSize = nameSize
+    labels[id].role.TextSize = roleSize
+
     if showNames then
-        if not labels[id] then
-            local bp = Instance.new("BillboardGui")
-            bp.AlwaysOnTop = true
-            bp.LightInfluence = 0
-            bp.StudsOffset = Vector3.new(0, 3, 0)
-            bp.Size = UDim2.new(0, 120, 0, 30)
-
-            local nameTL = Instance.new("TextLabel")
-            nameTL.BackgroundTransparency = 1
-            nameTL.Size = UDim2.new(1, 0, 0, 14)
-            nameTL.Position = UDim2.new(0, 0, 0, 0)
-            nameTL.Font = Enum.Font.GothamBold
-            nameTL.TextColor3 = Color3.fromRGB(255, 255, 255)
-            nameTL.TextStrokeColor3 = Color3.new(0, 0, 0)
-            nameTL.TextStrokeTransparency = 0
-            nameTL.TextScaled = false
-            nameTL.TextSize = 12
-            nameTL.Text = target.name
-            nameTL.Parent = bp
-
-            local roleTL = Instance.new("TextLabel")
-            roleTL.BackgroundTransparency = 1
-            roleTL.Size = UDim2.new(1, 0, 0, 10)
-            roleTL.Position = UDim2.new(0, 0, 0, 14)
-            roleTL.Font = Enum.Font.Gotham
-            roleTL.TextColor3 = color
-            roleTL.TextStrokeColor3 = Color3.new(0, 0, 0)
-            roleTL.TextStrokeTransparency = 0
-            roleTL.TextScaled = false
-            roleTL.TextSize = 9
-            roleTL.Text = roleText[target.type]
-            roleTL.Parent = bp
-
-            bp.Parent = target.part
-
-            labels[id] = { gui = bp, name = nameTL, role = roleTL }
-        end
-
-        local dist = (cam.CFrame.Position - target.part.Position).Magnitude
-        local scale = math.clamp(150 / dist, 0.5, 2)
-        local baseSize = Esp.Options and Esp.Options.EspSize and Esp.Options.EspSize.Value or 14
-
-        local nameSize = math.clamp(baseSize * scale, 8, baseSize * 2)
-        local roleSize = math.clamp(baseSize * scale * 0.7, 6, baseSize * 1.5)
-
-        labels[id].name.TextSize = nameSize
-        labels[id].role.TextSize = roleSize
         labels[id].gui.Size = UDim2.new(0, nameSize * 8, 0, nameSize + roleSize)
         labels[id].role.Position = UDim2.new(0, 0, 0, nameSize)
-    elseif labels[id] then
-        labels[id].gui:Destroy()
-        labels[id] = nil
+    else
+        labels[id].gui.Size = UDim2.new(0, roleSize * 8, 0, roleSize)
+        labels[id].role.Position = UDim2.new(0, 0, 0, 0)
     end
 end
 
