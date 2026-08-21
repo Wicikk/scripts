@@ -1,17 +1,7 @@
 return function(Window, Roaring)
     local LatestChangelog = {
         "21/8/2026",
-        "<font color='rgb(0, 255, 0)'>+ Released Roaring script</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Silent Aim (Sans + Tenna)</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Spam Fake M1 (Knight, Jevil, Spamton, Flowery)</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Auto Use Abilities</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Kill All (auto TP behind survivor)</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Bone / Scarlet Forest transparency</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Berdly Eye Mark</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added No Spamton Ads / No Blind</font>",
-        "<font color='rgb(0, 255, 0)'>+ Added Flowery Dash</font>",
-        "<font color='rgb(0, 255, 0)'>+ Fixed Auto Block double hitbox bug</font>",
-        "<font color='rgb(0, 255, 0)'>+ Auto Block converted from TabBox to Groupbox</font>",
+        "<font color='rgb(0, 255, 0)'>+ Released script</font>", 
     }
 
     local Environment = Roaring.Environment
